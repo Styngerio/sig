@@ -1,0 +1,9 @@
+ print("click")
+        self.grid= ttk.Treeview(self, columns="coll1")
+        self.grid.column("coll1", width=60, anchor= CENTER)
+        self.grid.heading("coll1", text="Label", anchor=CENTER)
+        self.grid.place(x=247,y=0,width=420, height=259)
+        self.grid.insert("",END,text=1, values=("xd", "lol"))
+
+
+
