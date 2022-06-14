@@ -28,13 +28,13 @@ class Solicitud(Frame):
         #selecciona proveedor
         Label(frameemploye,text="Proveedor").place(y=80,x=20)
         self.proveedor = ttk.Combobox(frameemploye,state="readonly")
+        self.proveedor.bind("<<ComboboxSelected>>",self.selected_Proveedor)
         self.proveedor.place(x=20, y=100)
 
         #selecciona insmo
         Label(frameemploye,text="Insumo").place(y=120,x=20)
-        #self.producto = Entry(frameemploye,width=20)
-        #self.producto.place(y=140, x=20)
         self.insumo = ttk.Combobox(frameemploye,state="readonly")
+        self.insumo.bind("<<ComboboxSelected>>", self.selection_changed)
         self.insumo.place(y=140, x=20)
         
         #inserta cantidad
@@ -44,7 +44,7 @@ class Solicitud(Frame):
         self.cantidad.focus()
         #ingresa precio
         Label(frameemploye,text="Precio").place(y=120,x=310)
-        self.precio = Entry(frameemploye,width=20)
+        self.precio = Entry(frameemploye,width=20,state="readonly")
         self.precio.place(y=140, x=310)
 
         #total
@@ -65,32 +65,43 @@ class Solicitud(Frame):
         self.send = Button(framesecond, text="Enviar", command=self.submit, bg="green", fg="#ffffff")
         self.send.place(x=740, y=620, height=25, width=230)
 
-        self.grid= ttk.Treeview(framesecond, columns=("count","price"))
-        self.grid.place(relx=0.02,rely=0.3,relwidth=0.90, relheight=0.5)
+        self.grid= ttk.Treeview(framesecond, columns=("count","price","subtotal"))
+        self.grid.place(relx=0.02,rely=0.3,relwidth=0.75, relheight=0.48)
         self.grid.columnconfigure("0",weight=5)
 
         self.grid.column("#0",width=300, stretch=NO)        
-        self.grid.column("count",width=300, stretch=NO)
-        self.grid.column("price",width=300, stretch=NO)
+        self.grid.column("count",width=100, stretch=NO)
+        self.grid.column("price",width=200, stretch=NO)
+        self.grid.column("subtotal",width=300, stretch=NO)
         
 
 
         self.grid.heading("#0", text="Insumo", anchor=CENTER)
         self.grid.heading("count", text="Cantidad", anchor=CENTER)
         self.grid.heading("price", text="Precio", anchor=CENTER)
+        self.grid.heading("subtotal", text="Sub Total", anchor=CENTER)
         #cargar los datos proveedores e insumos
         self.uploadProveedor()
         self.uploadInsumo()
+    def selected_Proveedor(self,event):
+        indiceProveedor= self.Nproveedor.index(self.proveedor.get())
+        self.PROVEEDOR = self.ItemProveedor[indiceProveedor]
+
+    def selection_changed(self,event):
+        Indiceprice= self.itemI.index(self.insumo.get())
+        self.precio.config(textvariable=StringVar(value=str(self.ItemPrecio[Indiceprice])))
+
 
     def add(self):
         if self.validation():
             try:
                 indice = self.itemI.index(self.insumo.get()) #asigno el indice del elemento seleccionado
-                self.grid.insert("",END,text=self.insumo.get(), values=(self.cantidad.get(),self.precio.get()),iid=self.idI[indice])
+                subtotal= round(float(self.cantidad.get())*float(self.precio.get()),2)
+                self.grid.insert("",END,text=self.insumo.get(), values=(self.cantidad.get(),self.precio.get(),subtotal),iid=self.idI[indice])
                 nuevo = self.precio.get()
                 self.cantidad.delete(0,END)
                 self.precio.delete(0,END)
-                self.total(nuevo)
+                self.total(subtotal)
 
             except :
                 messagebox.showinfo(message="Este insumo ya fue seleccionado", title="Ingreso de datos")
@@ -110,9 +121,11 @@ class Solicitud(Frame):
         data = cur.fetchall()
         self.itemI =[]
         self.idI=[]
+        self.ItemPrecio = []
         for nombre in data:
             self.idI.append(nombre[0])
             self.itemI.append(nombre[1])
+            self.ItemPrecio.append(nombre[2])
         self.insumo.config(values=self.itemI)
             #self.grid.insert("",END,text=li[0], values=(li[1],li[2],self.cantidad.get()))
     def uploadProveedor(self):#carga los proveedores de la bg
@@ -121,15 +134,17 @@ class Solicitud(Frame):
         cur = conn.cursor()
         cur.execute("SELECT * FROM proveedor")
         data = cur.fetchall()
-        item =[]
+        self.Nproveedor =[]#nombre de los proveedores
+        self.ItemProveedor = []
         for nombre in data:
-            item.append(nombre[1])
-        self.proveedor.config(values=item)
+            self.Nproveedor.append(nombre[1])
+            self.ItemProveedor.append(nombre[0])
+        self.proveedor.config(values=self.Nproveedor)
             #self.grid.insert("",END,text=li[0], values=(li[1],li[2],self.cantidad.get()))
 
     def total(self,nuevo):
         
-        self.unitprice+=int(nuevo)
+        self.unitprice+=round(float(nuevo),2)
         self.TOTAL.config(textvariable=StringVar(value=str(self.unitprice)))
 
         print(self.unitprice)
@@ -144,23 +159,40 @@ class Solicitud(Frame):
     def deleter(self):
         print(self.confirm,"fg")
         if self.confirm():
-            restar =self.grid.item(self.grid.selection())['values'][1]
+            restar =self.grid.item(self.grid.selection())['values'][2]
             restar="-"+str(restar)
             print(type(restar))
-            self.total(restar)
+            self.total(restar) 
             self.select_item = self.grid.selection()
             print(self.select_item)
             self.grid.delete(self.select_item)
 
 
     def submit(self):
-        self.date= datetime.today()
-
-        print(self.grid.get_children())
-        print(self.TOTAL.get())
-        print("sending...",self.date)
+        print(self.PROVEEDOR,"proveedor")
+        if len(str(self.PROVEEDOR))!=0:
+            self.date= datetime.today()
+            data=(str(self.TOTAL.get()),1726257825,self.PROVEEDOR,str(self.date))
+            sql="INSERT INTO compra (total,usuario, proveedor,fechacompra)VALUES(%s, %s, %s, %s)"
+            conn= conect.get_conection()
+            cur = conn.cursor()
+            cur.execute(sql,data)
+            conn.commit()
+            conn.close()
+            print(sql,data)
+            conn= conect.get_conection()
+            data2=(str(self.TOTAL.get()),1726257825,self.PROVEEDOR)
+            cur = conn.cursor()
+            cur.execute("SELECT id_compra FROM compra WHERE (total=%s AND usuario=%s AND proveedor=%s)",data2)
+            response = cur.fetchall()
+            print(response)
+            messagebox.showinfo(message="INsert correct", title="Ingreso de datos")
+            InsertP=self.grid.get_children()
+            for p in InsertP:
+                print(p)
+            print("sending...",self.date)
 
 
     
     def validation(self):
-        return len(self.insumo.get())!=0 and len(self.precio.get())!=0 and len(self.cantidad.get())!=0
+        return len(self.insumo.get())!=0 and len(self.precio.get())!=0 and len(self.cantidad.get())!=0 and len(self.proveedor.get())!=0
