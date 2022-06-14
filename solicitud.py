@@ -185,11 +185,18 @@ class Solicitud(Frame):
             cur = conn.cursor()
             cur.execute("SELECT id_compra FROM compra WHERE (total=%s AND usuario=%s AND proveedor=%s)",data2)
             response = cur.fetchall()
-            print(response)
+            conn.close()
+            compra = response[-1][0]
             messagebox.showinfo(message="INsert correct", title="Ingreso de datos")
             InsertP=self.grid.get_children()
-            for p in InsertP:
-                print(p)
+            conn= conect.get_conection()
+            cur = conn.cursor()
+            for insumo in InsertP:#aun falta corregir
+                data3 =(insumo,compra)
+                sql="INSERT INTO detalleCompra (id_insumo,id_compra)VALUES(%s, %s)"
+                cur.execute(sql,data3)
+                conn.commit()
+            
             print("sending...",self.date)
 
 
