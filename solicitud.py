@@ -51,6 +51,8 @@ class Solicitud(Frame):
         #buttons  to add
         self.add = Button(frameemploye, text="Añadir", command=self.add, bg="green", fg="#ffffff")
         self.add.place(x=490, y=140, height=25, width=100)
+        self.actualizar = Button(frameemploye, text="Actualizar", command=self.actualiza, bg="green", fg="#ffffff")
+        self.actualizar.place(x=630, y=140,height=25, width=100)
 
         self.edit = Button(framesecond, text="Editar", command=lambda:controller.show_frame("Menu"), bg="green", fg="#ffffff")
         self.edit.place(x=740, y=580, height=25, width=100)
@@ -78,8 +80,7 @@ class Solicitud(Frame):
         self.grid.heading("subtotal", text="Sub Total", anchor=CENTER)
         #cargar los datos proveedores e insumos
         self.PROVEEDOR = int()
-        self.uploadProveedor()
-        self.uploadInsumo()
+        self.actualiza()
     def selected_Proveedor(self,event):
         indiceProveedor= self.Nproveedor.index(self.proveedor.get())
         self.PROVEEDOR = self.ItemProveedor[indiceProveedor]
@@ -88,7 +89,9 @@ class Solicitud(Frame):
         Indiceprice= self.itemI.index(self.insumo.get())
         self.precio.config(textvariable=StringVar(value=str(self.ItemPrecio[Indiceprice])))
 
-
+    def actualiza(self):
+        self.uploadProveedor()
+        self.uploadInsumo()
     def add(self):
         if self.validation():
             try:
@@ -173,12 +176,13 @@ class Solicitud(Frame):
             conn.commit()
             conn.close()
             conn= conect.get_conection()
-            data2=(str(self.TOTAL.get()),1726257825,self.PROVEEDOR)
+            #data2=(str(self.TOTAL.get()),1726257825,self.PROVEEDOR)
             cur = conn.cursor()
-            cur.execute("SELECT id_compra FROM compra WHERE (total=%s AND usuario=%s AND proveedor=%s)",data2)
+            cur.execute("SELECT MAX(id_compra) AS id FROM compra")
             response = cur.fetchall()
             conn.close()
-            time.sleep(3)
+            #messagebox.showinfo(message="Waiting", title="Ingreso de datos")
+            #time.sleep(3)
             compra = response[-1][0]
             messagebox.showinfo(message="INsert correct", title="Ingreso de datos")
             InsertP=self.grid.get_children()

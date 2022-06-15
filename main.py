@@ -9,16 +9,16 @@ def donothing():
 
 #abre ventanas secundarias
 def insumo():
-    root = Tk()
-    root.wm_title("Registro de  Productos")
-    app= NewProduct(root)
-    app.mainloop()
+    insumo = Tk()
+    insumo.wm_title("Registro de  Productos")
+    Insumo= NewProduct(insumo)
+    Insumo.mainloop()
 
 def proveedor():
-    root = Tk()
-    root.wm_title("Registro de  Proveedores")
-    app= NewProveedor(root)
-    app.mainloop()
+    prov = Tk()
+    prov.wm_title("Registro de  Proveedores")
+    Prov= NewProveedor(prov)
+    Prov.mainloop()
 #ventana menu principal
 def main():
     root = Tk()
@@ -32,7 +32,7 @@ def main():
     filemenu.add_command(label="Save", command=donothing)
     filemenu.add_separator()
     filemenu.add_command(label="Exit", command=root.quit)
-    menubar.add_cascade(label="File", menu=filemenu)
+    menubar.add_cascade(label="Nuevo", menu=filemenu)
 
     helpmenu = Menu(menubar, tearoff=0)
     helpmenu.add_command(label="Help Index", command=donothing)
