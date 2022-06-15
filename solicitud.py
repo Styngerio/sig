@@ -1,10 +1,8 @@
-from asyncio import protocols
-from pydoc import visiblename
+import time
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import tkinter
-from turtle import st
 import conect 
 from datetime import datetime
 class Solicitud(Frame):
@@ -19,8 +17,6 @@ class Solicitud(Frame):
         framesecond = Frame(self,bg="#F6BC94")
         framesecond.place(relx=0.0,rely=0.0,relwidth=1, relheight=1)
 
-        #self.deslis=Scrollbar(self,Frame)
-        #self.deslis.pack(side="right", fill="y")
         
         frameemploye = Frame(self, bg="#9E94F6")
         frameemploye.place(relx=0.0,rely=0.0,relwidth=1, relheight=0.3)
@@ -50,7 +46,7 @@ class Solicitud(Frame):
         #total
         self.TOTAL = Entry(framesecond,textvariable=StringVar(value="0"),state="readonly")
         self.TOTAL.place(x=500, y=580, height=25, width=100)
-        #Entry(self.edit wind,textvariable=StringVar(self.edit_wind,value=name),state='readonly').grid
+        
 
         #buttons  to add
         self.add = Button(frameemploye, text="Añadir", command=self.add, bg="green", fg="#ffffff")
@@ -65,22 +61,23 @@ class Solicitud(Frame):
         self.send = Button(framesecond, text="Enviar", command=self.submit, bg="green", fg="#ffffff")
         self.send.place(x=740, y=620, height=25, width=230)
 
-        self.grid= ttk.Treeview(framesecond, columns=("count","price","subtotal"))
+        self.grid= ttk.Treeview(framesecond, columns=("count","price","subtotal"))#especificar las columnas
         self.grid.place(relx=0.02,rely=0.3,relwidth=0.75, relheight=0.48)
         self.grid.columnconfigure("0",weight=5)
-
+        #dando formato a las colummnas
         self.grid.column("#0",width=300, stretch=NO)        
         self.grid.column("count",width=100, stretch=NO)
         self.grid.column("price",width=200, stretch=NO)
         self.grid.column("subtotal",width=300, stretch=NO)
         
 
-
+        #Asignando titulos a las columnas
         self.grid.heading("#0", text="Insumo", anchor=CENTER)
         self.grid.heading("count", text="Cantidad", anchor=CENTER)
         self.grid.heading("price", text="Precio", anchor=CENTER)
         self.grid.heading("subtotal", text="Sub Total", anchor=CENTER)
         #cargar los datos proveedores e insumos
+        self.PROVEEDOR = int()
         self.uploadProveedor()
         self.uploadInsumo()
     def selected_Proveedor(self,event):
@@ -114,7 +111,6 @@ class Solicitud(Frame):
             print("dont not")
 
     def uploadInsumo(self):#cargar los insumos de la bd
-        #se esta intentado crear funcion que carge datos en el tree view nada funcional
         conn= conect.get_conection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM insumo")
@@ -127,9 +123,8 @@ class Solicitud(Frame):
             self.itemI.append(nombre[1])
             self.ItemPrecio.append(nombre[2])
         self.insumo.config(values=self.itemI)
-            #self.grid.insert("",END,text=li[0], values=(li[1],li[2],self.cantidad.get()))
+            
     def uploadProveedor(self):#carga los proveedores de la bg
-        #se esta intentado crear funcion que carge datos en el tree view nada funcional
         conn= conect.get_conection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM proveedor")
@@ -140,23 +135,22 @@ class Solicitud(Frame):
             self.Nproveedor.append(nombre[1])
             self.ItemProveedor.append(nombre[0])
         self.proveedor.config(values=self.Nproveedor)
-            #self.grid.insert("",END,text=li[0], values=(li[1],li[2],self.cantidad.get()))
 
-    def total(self,nuevo):
+    def total(self,nuevo):#calcula el total de la compra
         
         self.unitprice+=round(float(nuevo),2)
         self.TOTAL.config(textvariable=StringVar(value=str(self.unitprice)))
 
         print(self.unitprice)
         
-    def confirm(self):
+    def confirm(self):#alerta de confirmacion para eliminar un item
         self.r = messagebox.askyesno(message="¿Desea eliminar ítem?", title="Título")
         if self.r == True:
             print(self.r)
             return self.r
 
 
-    def deleter(self):
+    def deleter(self):#elimina un item de la lista
         print(self.confirm,"fg")
         if self.confirm():
             restar =self.grid.item(self.grid.selection())['values'][2]
@@ -168,9 +162,8 @@ class Solicitud(Frame):
             self.grid.delete(self.select_item)
 
 
-    def submit(self):
-        print(self.PROVEEDOR,"proveedor")
-        if len(str(self.PROVEEDOR))!=0:
+    def submit(self):#creacion de la compra con su detalle
+        if int(self.PROVEEDOR)>0 and str(self.grid.get_children())!= "()":
             self.date= datetime.today()
             data=(str(self.TOTAL.get()),1726257825,self.PROVEEDOR,str(self.date))
             sql="INSERT INTO compra (total,usuario, proveedor,fechacompra)VALUES(%s, %s, %s, %s)"
@@ -179,13 +172,13 @@ class Solicitud(Frame):
             cur.execute(sql,data)
             conn.commit()
             conn.close()
-            print(sql,data)
             conn= conect.get_conection()
             data2=(str(self.TOTAL.get()),1726257825,self.PROVEEDOR)
             cur = conn.cursor()
             cur.execute("SELECT id_compra FROM compra WHERE (total=%s AND usuario=%s AND proveedor=%s)",data2)
             response = cur.fetchall()
             conn.close()
+            time.sleep(3)
             compra = response[-1][0]
             messagebox.showinfo(message="INsert correct", title="Ingreso de datos")
             InsertP=self.grid.get_children()
@@ -198,6 +191,9 @@ class Solicitud(Frame):
                 conn.commit()
             
             print("sending...",self.date)
+        else:
+            messagebox.showinfo(message="Registre al menos un ítem en la orden!", title="Ingreso de datos")
+            print("Its requiret almost a item!")
 
 
     

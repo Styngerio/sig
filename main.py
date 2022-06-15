@@ -1,16 +1,23 @@
 from frames import Frames
-from newsuplier import Newsuplier
+from newProveedor import NewProveedor
+from newProduct import NewProduct
 from login import Login
 from tkinter import *
 
 def donothing():
    x = 0
 
-#abre ventana secundaria
-def new():
+#abre ventanas secundarias
+def insumo():
     root = Tk()
-    root.wm_title("Registrar Proveerdor")
-    app= Newsuplier(root)
+    root.wm_title("Registro de  Productos")
+    app= NewProduct(root)
+    app.mainloop()
+
+def proveedor():
+    root = Tk()
+    root.wm_title("Registro de  Proveedores")
+    app= NewProveedor(root)
     app.mainloop()
 #ventana menu principal
 def main():
@@ -20,8 +27,8 @@ def main():
     #menubar 
     menubar= Menu(root)
     filemenu = Menu(menubar, tearoff=0)
-    filemenu.add_command(label="New", command=new)
-    filemenu.add_command(label="Open", command=donothing)
+    filemenu.add_command(label="Añadir Insumo", command=insumo)
+    filemenu.add_command(label="Añadir Proveedor", command=proveedor)
     filemenu.add_command(label="Save", command=donothing)
     filemenu.add_separator()
     filemenu.add_command(label="Exit", command=root.quit)
