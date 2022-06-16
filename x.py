@@ -1,7 +1,6 @@
 from frames import Frames
 from newProveedor import NewProveedor
 from newProduct import NewProduct
-from login import Login
 from tkinter import *
 
 def donothing():
@@ -43,15 +42,8 @@ def main():
     app.mainloop()
 
 
-def login():
-    start=Tk()
-    start.wm_title("Inicio de sesión")
-    start.resizable(0,0)
-    app = Login(start)
-    app.mainloop()
 
 
 if __name__=="__main__":
-    if login()!= None:
-        main()
+    main()
     

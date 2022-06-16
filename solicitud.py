@@ -1,4 +1,3 @@
-import time
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -13,6 +12,7 @@ class Solicitud(Frame):
         print("este este tambien")
         print(self.flag)
         self.unitprice = 0#sumador de precios
+        self.PROVEEDOR = int()#id proveedor
         
         framesecond = Frame(self,bg="#F6BC94")
         framesecond.place(relx=0.0,rely=0.0,relwidth=1, relheight=1)
@@ -51,7 +51,7 @@ class Solicitud(Frame):
         #buttons  to add
         self.add = Button(frameemploye, text="Añadir", command=self.add, bg="green", fg="#ffffff")
         self.add.place(x=490, y=140, height=25, width=100)
-        self.actualizar = Button(frameemploye, text="Actualizar", command=self.actualiza, bg="green", fg="#ffffff")
+        self.actualizar = Button(frameemploye, text="Actualizar", command=lambda:self.actualiza(self.PROVEEDOR), bg="green", fg="#ffffff")
         self.actualizar.place(x=630, y=140,height=25, width=100)
 
         self.edit = Button(framesecond, text="Editar", command=lambda:controller.show_frame("Menu"), bg="green", fg="#ffffff")
@@ -63,7 +63,7 @@ class Solicitud(Frame):
         self.send = Button(framesecond, text="Enviar", command=self.submit, bg="green", fg="#ffffff")
         self.send.place(x=740, y=620, height=25, width=230)
 
-        self.grid= ttk.Treeview(framesecond, columns=("count","price","subtotal"))#especificar las columnas
+        self.grid= ttk.Treeview(framesecond, columns=("count","price","subtotal",))#especificar las columnas
         self.grid.place(relx=0.02,rely=0.3,relwidth=0.75, relheight=0.48)
         self.grid.columnconfigure("0",weight=5)
         #dando formato a las colummnas
@@ -79,19 +79,22 @@ class Solicitud(Frame):
         self.grid.heading("price", text="Precio", anchor=CENTER)
         self.grid.heading("subtotal", text="Sub Total", anchor=CENTER)
         #cargar los datos proveedores e insumos
-        self.PROVEEDOR = int()
-        self.actualiza()
+        
+        self.actualiza(self.PROVEEDOR)
+
     def selected_Proveedor(self,event):
         indiceProveedor= self.Nproveedor.index(self.proveedor.get())
         self.PROVEEDOR = self.ItemProveedor[indiceProveedor]
+        self.uploadInsumo(self.PROVEEDOR)
 
     def selection_changed(self,event):
         Indiceprice= self.itemI.index(self.insumo.get())
         self.precio.config(textvariable=StringVar(value=str(self.ItemPrecio[Indiceprice])))
 
-    def actualiza(self):
+    def actualiza(self,p):
         self.uploadProveedor()
-        self.uploadInsumo()
+        self.uploadInsumo(p)
+
     def add(self):
         if self.validation():
             try:
@@ -104,19 +107,21 @@ class Solicitud(Frame):
                 self.total(subtotal)
 
             except :
-                messagebox.showinfo(message="Este insumo ya fue seleccionado", title="Ingreso de datos")
+                messagebox.showinfo(message=f"{self.insumo.get()} ya fue seleccionado", title="Ingreso de datos")
                 self.cantidad.delete(0,END)
                 self.precio.delete(0,END)
                 print("dont not")
 
         else :
-            messagebox.showinfo(message="Debe llenar todos los campos para poder continuar", title="Ingreso de datos")
+            messagebox.showwarning(message="Debe llenar todos los campos para poder continuar", title="Ingreso de datos")
             print("dont not")
 
-    def uploadInsumo(self):#cargar los insumos de la bd
+    def uploadInsumo(self,p):#cargar los insumos de la bd
         conn= conect.get_conection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM insumo")
+        proveedor = (p,)
+        sql ="SELECT * FROM insumo WHERE proveedor= '%s'"
+        cur.execute(sql,proveedor)
         data = cur.fetchall()
         self.itemI =[]
         self.idI=[]
@@ -184,7 +189,6 @@ class Solicitud(Frame):
             #messagebox.showinfo(message="Waiting", title="Ingreso de datos")
             #time.sleep(3)
             compra = response[-1][0]
-            messagebox.showinfo(message="INsert correct", title="Ingreso de datos")
             InsertP=self.grid.get_children()
             conn= conect.get_conection()
             cur = conn.cursor()
@@ -193,10 +197,14 @@ class Solicitud(Frame):
                 sql="INSERT INTO detalleCompra (id_insumo,id_compra)VALUES(%s, %s)"
                 cur.execute(sql,data3)
                 conn.commit()
+            self.grid.delete(*self.grid.get_children())
+            self.unitprice = 0
+            self.TOTAL.config(textvariable=StringVar(value="0"))
+            messagebox.showinfo(message="Solicitud de compra realizada con exito", title="Ingreso de datos")
             
             print("sending...",self.date)
         else:
-            messagebox.showinfo(message="Registre al menos un ítem en la orden!", title="Ingreso de datos")
+            messagebox.showwarning(message="Registre al menos un ítem en la orden!", title="Ingreso de datos")
             print("Its requiret almost a item!")
 
 

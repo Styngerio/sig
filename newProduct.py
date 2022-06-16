@@ -78,5 +78,5 @@ class NewProduct(Frame):
             messagebox.showinfo(message=f"{self.nameP.get()}\nGuardado exitosamente", title="Ingreso de datos")
             print("Create new product !!")
         else:
-            messagebox.showinfo(message="Debe llenar todos los campos para poder continuar", title="Ingreso de datos")
+            messagebox.showwarning(message="Debe llenar todos los campos para poder continuar", title="Ingreso de datos")
             print("No create product!")
